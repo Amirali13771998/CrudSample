@@ -18,7 +18,7 @@ app.use(bodyParser.json());                                     // parse applica
 app.use(bodyParser.json({ type: 'application/vnd.api+json' })); // parse application/vnd.api+json as json
 app.use(methodOverride());
 
-var Todo = require('./model/sample');
+var Todo = require('./model//auth');
 mongoose.connect(database.url);
 app.listen(port,()=>{
     console.log("App listening on port : " + port);
@@ -79,30 +79,40 @@ app.listen(port,()=>{
 //     })
 // })
 
-app.patch('/sample/:id',(req,res)=>{
-    var id = req.params.id
-    var body = _.pick(req.body,['text','completed'])
+// app.patch('/sample/:id',(req,res)=>{
+//     var id = req.params.id
+//     var body = _.pick(req.body,['text','completed'])
 
-    if(!ObjectId.isValid(id)){
-        return res.status(404).send()
-    }
+//     if(!ObjectId.isValid(id)){
+//         return res.status(404).send()
+//     }
 
-    if(_.isBoolean(body.completed) && body.completed){
-        body.comletedAt = new Date().getTime()
-    }else{
-        body.completed = false
-        body.comletedAt = 189
-    }
+//     if(_.isBoolean(body.completed) && body.completed){
+//         body.comletedAt = new Date().getTime()
+//     }else{
+//         body.completed = false
+//         body.comletedAt = 189
+//     }
 
-    Todo.findByIdAndUpdate(id,{$set : body},{new : true}).then((todo)=>{
-        if(!todo){
-            return res.status(404).send()
-        }
-        res.send({todo})
+//     Todo.findByIdAndUpdate(id,{$set : body},{new : true}).then((todo)=>{
+//         if(!todo){
+//             return res.status(404).send()
+//         }
+//         res.send({todo})
+//     }).catch((e)=>{
+//         res.status(400).send()
+//     })
+// })
+
+app.post('/auth',(req,res)=>{
+    var body = _.pick(req.body,['email','password'])
+    var user = new Todo(body)
+
+    user.save().then((data)=>{
+        res.send(data)
     }).catch((e)=>{
-        res.status(400).send()
+        res.status(400).send(e)
     })
-
 })
 
 module.exports = app

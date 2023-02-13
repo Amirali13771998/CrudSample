@@ -17,6 +17,8 @@
     "mocha": "^10.2.0",
     "mongodb": "^5.0.1",
     "mongoose": "^6.9.1",
-    "supertest": "^6.3.3"
+    "save": "^2.9.0",
+    "supertest": "^6.3.3",
+    "validator": "^13.9.0"
   }
 }
