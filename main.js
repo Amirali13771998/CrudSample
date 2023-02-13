@@ -7,6 +7,7 @@ mongoose.set('strictQuery', false);
 var app = express();
 var database = require('./config/database');
 var bodyParser = require('body-parser');         // pull information from HTML POST (express4)
+const _ = require('lodash')
 
 var {ObjectId}  = require('mongodb')
 
@@ -23,18 +24,18 @@ app.listen(port,()=>{
     console.log("App listening on port : " + port);
 });
 
-app.post('/sample', function(req, res){
-    var todo = new Todo({
-        text : req.body.text,
-        completed : true,
-        comletedAt : 172 
-    });
-    todo.save().then((doc)=>{
-        res.send(doc)
-    },(e)=>{
-        console.log(e)
-    })
-})
+// app.post('/sample', function(req, res){
+//     var todo = new Todo({
+//         text : req.body.text,
+//         completed : true,
+//         comletedAt : 172 
+//     });                                          
+//     todo.save().then((doc)=>{
+//         res.send(doc)
+//     },(e)=>{
+//         console.log(e)
+//     })
+// })
 
 // app.get('/sample', (req,res)=>{
 //     Todo.find().then((todos)=>{
@@ -77,5 +78,31 @@ app.post('/sample', function(req, res){
 //         res.status(400).send()
 //     })
 // })
+
+app.patch('/sample/:id',(req,res)=>{
+    var id = req.params.id
+    var body = _.pick(req.body,['text','completed'])
+
+    if(!ObjectId.isValid(id)){
+        return res.status(404).send()
+    }
+
+    if(_.isBoolean(body.completed) && body.completed){
+        body.comletedAt = new Date().getTime()
+    }else{
+        body.completed = false
+        body.comletedAt = 189
+    }
+
+    Todo.findByIdAndUpdate(id,{$set : body},{new : true}).then((todo)=>{
+        if(!todo){
+            return res.status(404).send()
+        }
+        res.send({todo})
+    }).catch((e)=>{
+        res.status(400).send()
+    })
+
+})
 
 module.exports = app
