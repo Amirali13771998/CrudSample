@@ -109,8 +109,11 @@ app.post('/auth',(req,res)=>{
     var user = new Todo(body)
 
     user.save().then((data)=>{
-        res.send(data)
-    }).catch((e)=>{
+        user.generateAuthTocken();
+    }).then((token)=>{
+        res.header('x-auth',token).send(user)
+    })
+    .catch((e)=>{
         res.status(400).send(e)
     })
 })

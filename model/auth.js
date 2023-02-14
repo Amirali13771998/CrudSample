@@ -1,9 +1,11 @@
 const mongoose = require('mongoose');
-const validator = require('validator')
+const validator = require('validator');
+const jwt = require('jsonwebtoken')
+const _ = require('lodash')
 
- var Schema = mongoose.Schema;
+ var Schema = mongoose.Schema; // for adding method to model
 
- EmpSchema = new Schema({
+ var authSchema = new Schema({
     email : {
         type : String,
         required : true,
@@ -19,7 +21,7 @@ const validator = require('validator')
         required : true,
         minLength : 6
     },
-    token : [{
+    tokens : [{
         access : {
             type : String,
             require : true
@@ -31,5 +33,22 @@ const validator = require('validator')
     }]
 
 });
+authSchema.methods.toJSON = function(){
+    var user = this
+    var userObject = user.toObject()
+    return _.pick(userObject,['_id','email'])
+}
 
- module.exports = mongoose.model('Auth', EmpSchema);
+
+authSchema.methods.generateAuthTocken = function(){
+    var user = this
+    var access = 'Auth-access'
+    var token = jwt.sign({_id : user._id.toHexString(),access},'123abc').toString();
+
+    user.tokens.push({access,token})
+    return user.save().then(()=>{
+        return token
+    })
+}
+
+ module.exports = mongoose.model('Auth', authSchema);
