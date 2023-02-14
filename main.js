@@ -8,8 +8,9 @@ var app = express();
 var database = require('./config/database');
 var bodyParser = require('body-parser');         // pull information from HTML POST (express4)
 const _ = require('lodash')
-
+const {authenticate} = require('./middleware/authenticate')
 var {ObjectId}  = require('mongodb')
+
 
 var methodOverride = require('method-override');
 var port  = process.env.PORT || 3000;
@@ -18,7 +19,7 @@ app.use(bodyParser.json());                                     // parse applica
 app.use(bodyParser.json({ type: 'application/vnd.api+json' })); // parse application/vnd.api+json as json
 app.use(methodOverride());
 
-var Todo = require('./model//auth');
+var Todo = require('./model/auth');
 mongoose.connect(database.url);
 app.listen(port,()=>{
     console.log("App listening on port : " + port);
@@ -104,18 +105,22 @@ app.listen(port,()=>{
 //     })
 // })
 
-app.post('/auth',(req,res)=>{
-    var body = _.pick(req.body,['email','password'])
-    var user = new Todo(body)
+// app.post('/auth',(req,res)=>{
+//     var body = _.pick(req.body,['email','password'])
+//     var user = new Todo(body)
 
-    user.save().then((data)=>{
-        user.generateAuthTocken();
-    }).then((token)=>{
-        res.header('x-auth',token).send(user)
-    })
-    .catch((e)=>{
-        res.status(400).send(e)
-    })
+//     user.save().then(()=>{
+//        return user.generateAuthTocken();
+//     }).then((token)=>{
+//         res.header('x-auth',token).send(user)
+//     })
+//     .catch((e)=>{
+//         res.status(400).send(e)
+//     })
+// })
+
+app.get('/user/me',authenticate,(req,res)=>{
+    res.send(req.user)
 })
 
 module.exports = app
