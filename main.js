@@ -10,6 +10,7 @@ var bodyParser = require('body-parser');         // pull information from HTML P
 const _ = require('lodash')
 const {authenticate} = require('./middleware/authenticate')
 var {ObjectId}  = require('mongodb')
+const bcrypt = require('bcrypt')
 
 
 var methodOverride = require('method-override');
@@ -105,22 +106,22 @@ app.listen(port,()=>{
 //     })
 // })
 
-// app.post('/auth',(req,res)=>{
-//     var body = _.pick(req.body,['email','password'])
-//     var user = new Todo(body)
+app.post('/auth',(req,res)=>{
+    var body = _.pick(req.body,['email','password'])
+    var user = new Todo(body)
 
-//     user.save().then(()=>{
-//        return user.generateAuthTocken();
-//     }).then((token)=>{
-//         res.header('x-auth',token).send(user)
-//     })
-//     .catch((e)=>{
-//         res.status(400).send(e)
-//     })
-// })
-
-app.get('/user/me',authenticate,(req,res)=>{
-    res.send(req.user)
+    user.save().then(()=>{
+       return user.generateAuthTocken();
+    }).then((token)=>{
+        res.header('x-auth',token).send(user)
+    })
+    .catch((e)=>{
+        res.status(400).send(e)
+    })
 })
+
+// app.get('/user/me',authenticate,(req,res)=>{
+//     res.send(req.user)
+// })
 
 module.exports = app

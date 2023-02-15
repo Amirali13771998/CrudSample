@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const jwt = require('jsonwebtoken')
-const _ = require('lodash')
+const _ = require('lodash');
+const bcrypt = require('bcrypt');
 
  var Schema = mongoose.Schema; // for adding method to model
 
@@ -67,5 +68,19 @@ authSchema.statics.findByToken = function(token){
 
 
 }
+
+authSchema.pre('save',function(next){
+    var user = this
+    if(user.isModified('password')){
+        bcrypt.genSalt(10,(err,salt)=>{
+            bcrypt.hash(user.password,salt,(err,hash)=>{
+                user.password = hash
+                next()
+            })
+        })
+    }else{
+        next()
+    }
+})
 
  module.exports = mongoose.model('Auth', authSchema);
