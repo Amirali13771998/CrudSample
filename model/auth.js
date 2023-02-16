@@ -36,7 +36,7 @@ const bcrypt = require('bcrypt');
 });
 authSchema.methods.toJSON = function(){
     var user = this
-    var userObject = user.toObject()
+    var userObject = user.toObject()                              // for showing in response just id & email
     return _.pick(userObject,['_id','email'])
 }
 
@@ -44,7 +44,7 @@ authSchema.methods.toJSON = function(){
 authSchema.methods.generateAuthTocken = function(){
     var user = this
     var access = 'Auth-access'
-    var token = jwt.sign({_id : user._id.toHexString(),access},'123abc').toString();
+    var token = jwt.sign({_id : user._id.toHexString(),access},'123abc').toString();      // Generate Token
 
     user.tokens.push({access,token})
     return user.save().then(()=>{
@@ -57,7 +57,7 @@ authSchema.statics.findByToken = function(token){
     var decod;
     try{
         decod = jwt.verify(token,'123abc')
-    }catch{
+    }catch{                                                         // FindByToken
         return Promise.reject();
     }
     return User.findOne({
@@ -69,11 +69,43 @@ authSchema.statics.findByToken = function(token){
 
 }
 
+authSchema.statics.findAuthUser = function(email,password){
+    var User = this
+
+    
+    return User.findOne({email}).then((user)=>{
+        
+        if(!user){
+            return Promise.reject()                                     // this part for check login 
+        }
+        return new Promise((resolve,reject)=>{
+            bcrypt.compare(password,user.password,(err,res)=>{
+                if(res){
+                    resolve(user)
+                }else{
+                    reject()
+                }
+            })
+        })
+    })
+
+}
+
+authSchema.statics.deleteToken = function(token){
+    var user = this;
+    console.log(token)
+    return user.update({                                        // this part for check logOut 
+        $pull:{
+            tokens : {token}
+        }
+    })
+}
+
 authSchema.pre('save',function(next){
     var user = this
     if(user.isModified('password')){
         bcrypt.genSalt(10,(err,salt)=>{
-            bcrypt.hash(user.password,salt,(err,hash)=>{
+            bcrypt.hash(user.password,salt,(err,hash)=>{                 // Hashing Password
                 user.password = hash
                 next()
             })

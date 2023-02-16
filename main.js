@@ -10,8 +10,6 @@ var bodyParser = require('body-parser');         // pull information from HTML P
 const _ = require('lodash')
 const {authenticate} = require('./middleware/authenticate')
 var {ObjectId}  = require('mongodb')
-const bcrypt = require('bcrypt')
-
 
 var methodOverride = require('method-override');
 var port  = process.env.PORT || 3000;
@@ -26,86 +24,90 @@ app.listen(port,()=>{
     console.log("App listening on port : " + port);
 });
 
-// app.post('/sample', function(req, res){
-//     var todo = new Todo({
-//         text : req.body.text,
-//         completed : true,
-//         comletedAt : 172 
-//     });                                          
-//     todo.save().then((doc)=>{
-//         res.send(doc)
-//     },(e)=>{
-//         console.log(e)
-//     })
-// })
+// *****************************CRUD******************************************************
+app.post('/sample', function(req, res){
+    var todo = new Todo({
+        text : req.body.text,
+        completed : true,
+        comletedAt : 172 
+    });                                          
+    todo.save().then((doc)=>{
+        res.send(doc)
+    },(e)=>{
+        console.log(e)
+    })
+})
 
-// app.get('/sample', (req,res)=>{
-//     Todo.find().then((todos)=>{
-//         res.send({todos})
-//     },(e)=>{
-//         res.status(400).send(e)
-//     })
-// })
+app.get('/sample', (req,res)=>{
+    Todo.find().then((todos)=>{
+        res.send({todos})
+    },(e)=>{
+        res.status(400).send(e)
+    })
+})
 
-// app.get('/sample/:id', (req,res)=>{
-//     var id = req.params.id
+app.get('/sample/:id', (req,res)=>{
+    var id = req.params.id
     
-//     if(!ObjectId.isValid(id)){
-//         return res.status(404).send()
-//     }
+    if(!ObjectId.isValid(id)){
+        return res.status(404).send()
+    }
 
-//     Todo.findById(id).then((todos)=>{
-//         if(!todos){
-//             return res.status(404).send()
-//         }
-//         res.send({todos})
-//     }).catch((e)=>{
-//         res.status(400).send()
-//     })
+    Todo.findById(id).then((todos)=>{
+        if(!todos){
+            return res.status(404).send()
+        }
+        res.send({todos})
+    }).catch((e)=>{
+        res.status(400).send()
+    })
 
-// })
+})
 
-// app.delete('/sample/:id',(req,res)=>{
-//     var id = req.params.id
+app.delete('/sample/:id',(req,res)=>{
+    var id = req.params.id
 
-//     if(!ObjectId.isValid(id)){
-//         return res.status(404).send()
-//     }
-//     Todo.findByIdAndRemove(id).then((todos)=>{
-//         if(!todos){
-//             return res.status(404).send()
-//         }
-//         res.send({todos})
-//     }).catch((e)=>{
-//         res.status(400).send()
-//     })
-// })
+    if(!ObjectId.isValid(id)){
+        return res.status(404).send()
+    }
+    Todo.findByIdAndRemove(id).then((todos)=>{
+        if(!todos){
+            return res.status(404).send()
+        }
+        res.send({todos})
+    }).catch((e)=>{
+        res.status(400).send()
+    })
+})
 
-// app.patch('/sample/:id',(req,res)=>{
-//     var id = req.params.id
-//     var body = _.pick(req.body,['text','completed'])
+app.patch('/sample/:id',(req,res)=>{
+    var id = req.params.id
+    var body = _.pick(req.body,['text','completed'])
 
-//     if(!ObjectId.isValid(id)){
-//         return res.status(404).send()
-//     }
+    if(!ObjectId.isValid(id)){
+        return res.status(404).send()
+    }
 
-//     if(_.isBoolean(body.completed) && body.completed){
-//         body.comletedAt = new Date().getTime()
-//     }else{
-//         body.completed = false
-//         body.comletedAt = 189
-//     }
+    if(_.isBoolean(body.completed) && body.completed){
+        body.comletedAt = new Date().getTime()
+    }else{
+        body.completed = false
+        body.comletedAt = 189
+    }
 
-//     Todo.findByIdAndUpdate(id,{$set : body},{new : true}).then((todo)=>{
-//         if(!todo){
-//             return res.status(404).send()
-//         }
-//         res.send({todo})
-//     }).catch((e)=>{
-//         res.status(400).send()
-//     })
-// })
+    Todo.findByIdAndUpdate(id,{$set : body},{new : true}).then((todo)=>{
+        if(!todo){
+            return res.status(404).send()
+        }
+        res.send({todo})
+    }).catch((e)=>{
+        res.status(400).send()
+    })
+})
+// *****************************CRUD******************************************************
 
+
+//************************************Sending Data ****************************************
 app.post('/auth',(req,res)=>{
     var body = _.pick(req.body,['email','password'])
     var user = new Todo(body)
@@ -120,8 +122,39 @@ app.post('/auth',(req,res)=>{
     })
 })
 
-// app.get('/user/me',authenticate,(req,res)=>{
-//     res.send(req.user)
-// })
+//************************************Sending Data ****************************************
+
+app.get('/user/me',authenticate,(req,res)=>{
+    res.send(req.user)
+})
+
+
+// *************************************this post for login**********************
+app.post('/user/login',(req,res)=>{
+    var body = _.pick(req.body,['email','password'])
+    
+
+    Todo.findAuthUser(body.email,body.password).then((user)=>{               
+        return user.generateAuthTocken().then((token)=>{
+            res.header('x-auth',token).send(user)
+        })
+    }).catch((err)=>{
+        res.status(400).send()
+    })
+})
+
+// ***********************************this post for login**********************
+
+
+// ***********************************this post for logOut**********************
+
+app.delete('/user/token/delete',authenticate,(req,res)=>{
+    console.log(req)
+    Todo.deleteToken(req.token).then(()=>{
+        res.status(200).send()
+    }).catch((err)=>{
+        res.status(400).send()
+    })
+})
 
 module.exports = app
